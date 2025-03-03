@@ -1,0 +1,87 @@
+Web assembly code
+
+To run a C program in the browser using WebAssembly (WASM) that adds two numbers, follow these steps:
+
+ Install Emscripten
+
+First, install Emscripten to compile C code to WebAssembly.
+
+Windows: Install Emscripten SDK
+
+Linux/macOS:
+
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh
+
+
+ Write the C Code (add.c)
+
+Create a file add.c with the following code:
+
+#include <emscripten.h>
+
+EMSCRIPTEN_KEEPALIVE
+int add(int a, int b) {
+    return a + b;
+}
+
+This defines a WebAssembly function add() that takes two integers and returns their sum.
+
+
+Compile C to WebAssembly
+
+Use Emscripten to compile the add.c file into a WebAssembly (.wasm) module:
+
+emcc add.c -o add.js -sEXPORTED_FUNCTIONS=_add -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+
+This will generate:
+
+add.wasm (WebAssembly binary)
+
+add.js (JavaScript file to load WASM
+
+ Create an HTML File (index.html)
+
+This HTML file loads the WebAssembly module and interacts with it:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAssembly Add Two Numbers</title>
+</head>
+<body>
+    <h1>Add Two Numbers Using WebAssembly</h1>
+    <input type="number" id="num1" placeholder="Enter first number">
+    <input type="number" id="num2" placeholder="Enter second number">
+    <button onclick="calculate()">Add</button>
+    <p>Result: <span id="result"></span></p>
+
+    <script src="add.js"></script>
+    <script>
+        function calculate() {
+            let num1 = parseInt(document.getElementById("num1").value);
+            let num2 = parseInt(document.getElementById("num2").value);
+            
+            Module.onRuntimeInitialized = function() {
+                let add = Module.cwrap('add', 'number', ['number', 'number']);
+                let result = add(num1, num2);
+                document.getElementById("result").innerText = result;
+            };
+        }
+    </script>
+</body>
+</html>
+
+
+ Run the Program in a Browser
+
+Since browsers block direct WebAssembly file access, start a local web server:
+
+emrun --no_browser --port 8080 .
+
+Then open http://localhost:8080/index.html
+
+
